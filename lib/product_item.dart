@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:money_split/product.dart';
+import 'package:money_split/products_service.dart';
+import 'package:provider/provider.dart';
 
 class ProductItem extends StatefulWidget {
-  ProductItem({Key key, this.people, this.product, this.checkedPeople})
-      : super(key: key);
+  ProductItem({Key key, this.product, this.checkedPeople}) : super(key: key);
 
-  final List<String> people;
   final Product product;
   final List<String> checkedPeople;
 
@@ -64,25 +64,31 @@ class _ProductItemState extends State<ProductItem>
                   subtitle: Text(
                       "Total price: ${widget.product.totalPrice.toStringAsFixed(2)}"),
                 ),
-                AnimatedCrossFade(
-                  duration: Duration(milliseconds: 300),
-                  crossFadeState: editing
-                      ? CrossFadeState.showFirst
-                      : CrossFadeState.showSecond,
-                  alignment: Alignment.topLeft,
-                  firstChild: Wrap(
-                    direction: Axis.horizontal,
-                    children: [
-                      for (int i = 0; i < widget.people.length; i++) ...[
-                        buildPersonCheckbox(widget.people[i]),
-                        SizedBox(
-                          width: 8,
-                        )
-                      ]
-                    ],
-                  ),
-                  secondChild: Container(),
-                ),
+                StreamBuilder<List<String>>(
+                    stream: context.select((PeopleService s) => s.peopleStream),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return Container();
+                      var people = snapshot.data;
+                      return AnimatedCrossFade(
+                        duration: Duration(milliseconds: 300),
+                        crossFadeState: editing
+                            ? CrossFadeState.showFirst
+                            : CrossFadeState.showSecond,
+                        alignment: Alignment.topLeft,
+                        firstChild: Wrap(
+                          direction: Axis.horizontal,
+                          children: [
+                            for (int i = 0; i < people.length; i++) ...[
+                              buildPersonCheckbox(people[i]),
+                              SizedBox(
+                                width: 8,
+                              )
+                            ]
+                          ],
+                        ),
+                        secondChild: Container(),
+                      );
+                    }),
               ],
             ),
           ),
@@ -101,11 +107,15 @@ class _ProductItemState extends State<ProductItem>
     return ChoiceChip(
       elevation: widget.checkedPeople.contains(name) ? 8 : 0,
       label: Text(name),
-      backgroundColor: Colors
-          .primaries[widget.people.indexOf(name) * 7 % Colors.primaries.length]
+      backgroundColor: Colors.primaries[
+              context.read<PeopleService>().people.indexOf(name) *
+                  5 %
+                  Colors.primaries.length]
           .withOpacity(0.2),
-      selectedColor: Colors
-          .primaries[widget.people.indexOf(name) * 7 % Colors.primaries.length]
+      selectedColor: Colors.primaries[
+              context.read<PeopleService>().people.indexOf(name) *
+                  5 %
+                  Colors.primaries.length]
           .withOpacity(0.8),
       labelStyle: TextStyle(color: Colors.black),
       selected: widget.checkedPeople.contains(name),

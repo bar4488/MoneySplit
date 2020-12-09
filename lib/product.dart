@@ -50,4 +50,17 @@ class Product {
 
   @override
   String toString() => 'Product(price: $price, name: $name, amount: $amount)';
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+
+    return o is Product &&
+        o.price == price &&
+        o.name == name &&
+        o.amount == amount;
+  }
+
+  @override
+  int get hashCode => price.hashCode ^ name.hashCode ^ amount.hashCode;
 }

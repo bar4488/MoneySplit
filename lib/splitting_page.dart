@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:money_split/keep_alive.dart';
-import 'package:money_split/main.dart';
+import 'package:money_split/add_products_page.dart';
 import 'package:money_split/money_split_result.dart';
 import 'package:money_split/product.dart';
 import 'package:money_split/product_item.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:money_split/products_service.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplittingPage extends StatefulWidget {
@@ -15,8 +16,6 @@ class SplittingPage extends StatefulWidget {
 }
 
 class _SplittingPageState extends State<SplittingPage> {
-  List<Product> products = List();
-  List<String> people = List();
   Map<Product, List<String>> shoppingCart = Map();
   String name, nameError;
   PageController controller = PageController();
@@ -24,37 +23,25 @@ class _SplittingPageState extends State<SplittingPage> {
 
   @override
   void initState() {
-    initialize();
     super.initState();
-  }
-
-  void initialize() async {
-    preferences = await SharedPreferences.getInstance();
-    setState(() {
-      people = preferences.getStringList("people") ?? [];
-    });
   }
 
   void addPerson() {
     nameError = null;
+    PeopleService service = context.read();
     setState(() {
       name = name.trim();
       if (name == null || name.isEmpty) {
         nameError = "name cannot be empty";
         return;
       }
-      if (people.contains(name)) {
+      if (service.people.contains(name)) {
         nameError = "name must be unique";
         return;
       }
 
-      people.add(name);
-      updatePeoplePreferences();
+      service.addPerson(name);
     });
-  }
-
-  void updatePeoplePreferences() async {
-    await preferences.setStringList("people", people);
   }
 
   @override
@@ -63,17 +50,25 @@ class _SplittingPageState extends State<SplittingPage> {
       appBar: AppBar(
         title: Text("Money Split"),
       ),
-      body: PageView(
-        controller: controller,
-        children: [
-          ProductListPage(products: products, onChange: () => setState(() {})),
-          if (products.length != 0) buildPeopleList(),
-          if (people.length != 0)
-            KeepAlivePage(
-              child: buildProductsList(),
-            ),
-        ],
-      ),
+      body: StreamBuilder<List<Product>>(
+          stream: context.select((ProductService s) => s.productsStream),
+          builder: (context, products) {
+            return StreamBuilder<List<String>>(
+                stream: context.select((PeopleService s) => s.peopleStream),
+                builder: (context, people) {
+                  return PageView(
+                    controller: controller,
+                    children: [
+                      ProductListPage(),
+                      if (products.hasData && products.data.length != 0) ...[
+                        buildPeopleList(),
+                        if (people.hasData && people.data.length != 0)
+                          buildProductsList(products.data)
+                      ],
+                    ],
+                  );
+                });
+          }),
       floatingActionButton: Builder(builder: (context) {
         return FloatingActionButton(
           onPressed: () => nextStage(context),
@@ -110,7 +105,7 @@ class _SplittingPageState extends State<SplittingPage> {
     }
   }
 
-  Widget buildProductsList() {
+  Widget buildProductsList(List<Product> products) {
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -126,7 +121,6 @@ class _SplittingPageState extends State<SplittingPage> {
       shoppingCart[product] = List();
     }
     return ProductItem(
-      people: people,
       product: product,
       checkedPeople: shoppingCart[product],
     );
@@ -156,17 +150,22 @@ class _SplittingPageState extends State<SplittingPage> {
             Expanded(
               child: SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    for (int i = 0; i < people.length; i++)
-                      Container(
-                        child: buildPerson(people[i]),
-                      ),
-                    SizedBox(
-                      height: 60,
-                    )
-                  ],
-                ),
+                child: StreamBuilder<List<String>>(
+                    stream: context.read<PeopleService>().peopleStream,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return Container();
+                      return Column(
+                        children: [
+                          for (int i = 0; i < snapshot.data.length; i++)
+                            Container(
+                              child: buildPerson(snapshot.data[i]),
+                            ),
+                          SizedBox(
+                            height: 60,
+                          )
+                        ],
+                      );
+                    }),
               ),
             )
           ],
@@ -182,7 +181,8 @@ class _SplittingPageState extends State<SplittingPage> {
         subtitle: Text("Price: ${product.price}"),
         trailing: IconButton(
           icon: Icon(Icons.delete),
-          onPressed: () => setState(() => products.remove(product)),
+          onPressed: () => setState(
+              () => context.read<ProductService>().removeProduct(product)),
         ),
       ),
     );
@@ -193,15 +193,16 @@ class _SplittingPageState extends State<SplittingPage> {
     return Container(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors
-              .primaries[people.indexOf(name) * 5 % Colors.primaries.length],
+          backgroundColor: Colors.primaries[
+              context.read<PeopleService>().people.indexOf(name) *
+                  5 %
+                  Colors.primaries.length],
         ),
         title: Text(name),
         trailing: IconButton(
           icon: Icon(Icons.delete),
           onPressed: () => setState(() {
-            people.remove(name);
-            updatePeoplePreferences();
+            context.read<PeopleService>().removePerson(name);
           }),
         ),
       ),
