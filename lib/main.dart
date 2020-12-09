@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Money Split',
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
+        primarySwatch: Colors.teal,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: SplittingPage(),
@@ -76,6 +76,7 @@ class _ProductListPageState extends State<ProductListPage> {
                 labelText: "Product",
                 errorText: productError,
               ),
+              textInputAction: TextInputAction.next,
               textDirection: intl.Bidi.startsWithRtl(product ?? "")
                   ? TextDirection.rtl
                   : TextDirection.ltr,
@@ -93,6 +94,7 @@ class _ProductListPageState extends State<ProductListPage> {
                       labelText: "Price",
                       errorText: priceError,
                     ),
+                    textInputAction: TextInputAction.next,
                     textDirection: intl.Bidi.startsWithRtl(price ?? "")
                         ? TextDirection.rtl
                         : TextDirection.ltr,

@@ -169,8 +169,13 @@ class _SplittingPageState extends State<SplittingPage> {
   }
 
   Widget buildPerson(String name) {
+    print(Colors.primaries.length);
     return Container(
       child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors
+              .primaries[people.indexOf(name) * 5 % Colors.primaries.length],
+        ),
         title: Text(name),
         trailing: IconButton(
           icon: Icon(Icons.delete),

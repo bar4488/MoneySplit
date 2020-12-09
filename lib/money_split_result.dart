@@ -53,8 +53,16 @@ class MoneySplitResult extends StatelessWidget {
                 RaisedButton(
                   onPressed: () async {
                     await FlutterShare.share(
-                        title: "Money split result",
-                        text: jsonEncode(moneySplit));
+                      title: "Money split result",
+                      text: jsonEncode(
+                        moneySplit.map(
+                          (key, value) => MapEntry(
+                            key,
+                            value.toStringAsFixed(2),
+                          ),
+                        ),
+                      ),
+                    );
                   },
                   color: Theme.of(context).primaryColor,
                   child: Text("Share!"),

@@ -99,7 +99,15 @@ class _ProductItemState extends State<ProductItem>
 
   Widget buildPersonCheckbox(String name) {
     return ChoiceChip(
+      elevation: widget.checkedPeople.contains(name) ? 8 : 0,
       label: Text(name),
+      backgroundColor: Colors
+          .primaries[widget.people.indexOf(name) * 7 % Colors.primaries.length]
+          .withOpacity(0.2),
+      selectedColor: Colors
+          .primaries[widget.people.indexOf(name) * 7 % Colors.primaries.length]
+          .withOpacity(0.8),
+      labelStyle: TextStyle(color: Colors.black),
       selected: widget.checkedPeople.contains(name),
       onSelected: (value) {
         setState(() {
