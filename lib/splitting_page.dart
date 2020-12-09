@@ -5,6 +5,7 @@ import 'package:money_split/money_split_result.dart';
 import 'package:money_split/product.dart';
 import 'package:money_split/product_item.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplittingPage extends StatefulWidget {
   SplittingPage({Key key}) : super(key: key);
@@ -19,6 +20,20 @@ class _SplittingPageState extends State<SplittingPage> {
   Map<Product, List<String>> shoppingCart = Map();
   String name, nameError;
   PageController controller = PageController();
+  SharedPreferences preferences;
+
+  @override
+  void initState() {
+    initialize();
+    super.initState();
+  }
+
+  void initialize() async {
+    preferences = await SharedPreferences.getInstance();
+    setState(() {
+      people = preferences.getStringList("people") ?? [];
+    });
+  }
 
   void addPerson() {
     nameError = null;
@@ -34,7 +49,12 @@ class _SplittingPageState extends State<SplittingPage> {
       }
 
       people.add(name);
+      updatePeoplePreferences();
     });
+  }
+
+  void updatePeoplePreferences() async {
+    await preferences.setStringList("people", people);
   }
 
   @override
@@ -179,7 +199,10 @@ class _SplittingPageState extends State<SplittingPage> {
         title: Text(name),
         trailing: IconButton(
           icon: Icon(Icons.delete),
-          onPressed: () => setState(() => people.remove(name)),
+          onPressed: () => setState(() {
+            people.remove(name);
+            updatePeoplePreferences();
+          }),
         ),
       ),
     );
