@@ -19,6 +19,7 @@ class _ProductListPageState extends State<ProductListPage> {
   SuggestionsBoxController controller = SuggestionsBoxController();
   TextEditingController nameController = TextEditingController();
   TextEditingController priceController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
 
   void addItem() {
     priceError = null;
@@ -47,6 +48,8 @@ class _ProductListPageState extends State<ProductListPage> {
           price: doublePrice,
           amount: intAmount,
         );
+        nameController.text = "";
+        priceController.text = "";
         context.read<ProductSuggestionService>().addSuggestion(product);
         context.read<ProductService>().addProduct(product);
       }

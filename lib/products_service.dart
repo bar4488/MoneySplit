@@ -10,9 +10,10 @@ class ProductSuggestionService {
 
   List<Product> getProductsSuggestion(String suggestion) {
     if (suggestion.isEmpty) return [];
-    return List.from(((productsBox.get(suggestion[0]) ?? []) as List).map(
+    return List<Product>.from(
+        ((productsBox.get(suggestion[0]) ?? []) as List).map(
       (e) => Product.fromMap((e as Map).cast<String, dynamic>()),
-    ));
+    )).where((p) => p.name.startsWith(suggestion));
   }
 
   void addSuggestion(Product suggestion) {
