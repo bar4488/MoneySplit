@@ -50,6 +50,8 @@ class _ProductListPageState extends State<ProductListPage> {
         );
         nameController.text = "";
         priceController.text = "";
+        amountController.text = "1";
+        amount = "1";
         context.read<ProductSuggestionService>().addSuggestion(product);
         context.read<ProductService>().addProduct(product);
       }
@@ -135,6 +137,7 @@ class _ProductListPageState extends State<ProductListPage> {
                 ),
                 Expanded(
                   child: TextField(
+                    controller: amountController,
                     decoration: InputDecoration(
                       labelText: "Amount",
                       errorText: amountError,

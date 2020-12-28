@@ -11,9 +11,9 @@ class ProductSuggestionService {
   List<Product> getProductsSuggestion(String suggestion) {
     if (suggestion.isEmpty) return [];
     return List<Product>.from(
-        ((productsBox.get(suggestion[0]) ?? []) as List).map(
+        ((productsBox.get(suggestion.codeUnitAt(0)) ?? []) as List).map(
       (e) => Product.fromMap((e as Map).cast<String, dynamic>()),
-    )).where((p) => p.name.startsWith(suggestion));
+    )).where((p) => p.name.startsWith(suggestion)).toList();
   }
 
   void addSuggestion(Product suggestion) {
@@ -25,7 +25,7 @@ class ProductSuggestionService {
       ),
     )) {
       suggestions.add(suggestion.toMap());
-      productsBox.put(suggestion.name[0], suggestions);
+      productsBox.put(suggestion.name.codeUnitAt(0), suggestions);
     }
   }
 

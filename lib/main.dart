@@ -39,6 +39,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Money Split',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.teal,
           visualDensity: VisualDensity.adaptivePlatformDensity,

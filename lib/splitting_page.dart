@@ -46,47 +46,86 @@ class _SplittingPageState extends State<SplittingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Money Split"),
-      ),
-      body: StreamBuilder<List<Product>>(
-          stream: context.select((ProductService s) => s.productsStream),
-          builder: (context, products) {
-            return StreamBuilder<List<String>>(
-                stream: context.select((PeopleService s) => s.peopleStream),
-                builder: (context, people) {
-                  return PageView(
-                    controller: controller,
-                    children: [
-                      ProductListPage(),
-                      if (products.hasData && products.data.length != 0) ...[
-                        buildPeopleList(),
-                        if (people.hasData && people.data.length != 0)
-                          buildProductsList(products.data)
-                      ],
-                    ],
-                  );
-                });
-          }),
-      floatingActionButton: Builder(builder: (context) {
-        return FloatingActionButton(
-          onPressed: () => nextStage(context),
-          tooltip: 'Done',
-          child: Icon(Icons.check),
-        );
-      }),
-    );
+    return StreamBuilder<List<Product>>(
+        stream: context.watch<ProductService>().productsStream,
+        builder: (context, snapshot) {
+          var sum = snapshot.data
+              .map((e) => e.amount * e.price)
+              .reduce((value, element) => value + element);
+          return Scaffold(
+            appBar: AppBar(
+              title: Text("Money Split"),
+              centerTitle: true,
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    var s = context.read<ProductService>().productsStream;
+                    s.add(s.value..clear());
+                    shoppingCart.clear();
+                  },
+                  child: Text("clear", style: TextStyle(color: Colors.white)),
+                ),
+              ],
+              bottom: sum != null
+                  ? PreferredSize(
+                      child: Container(
+                        height: 25,
+                        color: Color.lerp(Colors.green, Colors.red, sum / 300),
+                        alignment: Alignment.center,
+                        child: Text(
+                          "Total: ${sum.toStringAsFixed(2)}",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      preferredSize: Size.fromHeight(20),
+                    )
+                  : null,
+            ),
+            body: StreamBuilder<List<Product>>(
+                stream: context.select((ProductService s) => s.productsStream),
+                builder: (context, products) {
+                  return StreamBuilder<List<String>>(
+                      stream:
+                          context.select((PeopleService s) => s.peopleStream),
+                      builder: (context, people) {
+                        return PageView(
+                          controller: controller,
+                          children: [
+                            ProductListPage(),
+                            if (products.hasData &&
+                                products.data.length != 0) ...[
+                              buildPeopleList(),
+                              if (people.hasData && people.data.length != 0)
+                                buildProductsList(products.data)
+                            ],
+                          ],
+                        );
+                      });
+                }),
+            floatingActionButton: Builder(builder: (context) {
+              return FloatingActionButton(
+                onPressed: () => nextStage(context),
+                tooltip: 'Done',
+                child: Icon(Icons.check),
+              );
+            }),
+          );
+        });
   }
 
   void nextStage(BuildContext context) {
     if (controller.page == 2) {
       Map<String, double> peoplesMoney = Map();
       for (MapEntry<Product, List<String>> entry in shoppingCart.entries) {
-        for (String name in entry.value) {
-          peoplesMoney.putIfAbsent(name, () => 0);
-          peoplesMoney[name] += entry.key.totalPrice / entry.value.length;
-        }
+        if (context
+            .read<ProductService>()
+            .productsStream
+            .value
+            .contains(entry.key))
+          for (String name in entry.value) {
+            peoplesMoney.putIfAbsent(name, () => 0);
+            peoplesMoney[name] += entry.key.totalPrice / entry.value.length;
+          }
       }
       showGeneralDialog(
           context: context,
