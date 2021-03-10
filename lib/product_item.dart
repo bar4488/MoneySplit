@@ -45,6 +45,7 @@ class _ProductItemState extends State<ProductItem>
                       ),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
                         children: [
                           Text(widget.product.name),
                           if (widget.product.amount != 1) ...[

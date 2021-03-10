@@ -49,9 +49,12 @@ class _SplittingPageState extends State<SplittingPage> {
     return StreamBuilder<List<Product>>(
         stream: context.watch<ProductService>().productsStream,
         builder: (context, snapshot) {
-          var sum = snapshot.data
-              .map((e) => e.amount * e.price)
-              .reduce((value, element) => value + element);
+          var sum = 0.0;
+          if (snapshot.hasData && snapshot.data.length != 0) {
+            sum = snapshot.data
+                .map((e) => e.amount * e.price)
+                .reduce((value, element) => value + element);
+          }
           return Scaffold(
             appBar: AppBar(
               title: Text("Money Split"),
@@ -157,7 +160,7 @@ class _SplittingPageState extends State<SplittingPage> {
 
   ProductItem buildProductItem(Product product) {
     if (shoppingCart[product] == null) {
-      shoppingCart[product] = List();
+      shoppingCart[product] = [];
     }
     return ProductItem(
       product: product,
